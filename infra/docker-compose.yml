@@ -1,0 +1,53 @@
+services:
+  auth-db:
+    image: postgres:16
+    container_name: smartflow-auth-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: smartflow
+      POSTGRES_PASSWORD: smartflow123
+      POSTGRES_DB: smartflow_auth
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+
+  crm-db:
+    image: postgres:16
+    container_name: smartflow-crm-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: smartflow
+      POSTGRES_PASSWORD: smartflow123
+      POSTGRES_DB: smartflow_crm
+
+    ports:
+      - "5434:5432"
+
+    volumes:
+      - crm_postgres_data:/var/lib/postgresql/data
+
+  erp-db:
+    image: postgres:16
+    container_name: smartflow-erp-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: smartflow
+      POSTGRES_PASSWORD: smartflow123
+      POSTGRES_DB: smartflow_erp
+
+    ports:
+      - "5435:5432"
+
+    volumes:
+      - erp_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  auth_postgres_data:
+  crm_postgres_data:
+  erp_postgres_data:

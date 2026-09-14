@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Cliente {
+  id            Int      @id @default(autoincrement())
+  nome          String
+  email         String?  @unique
+  telefone      String?
+  empresa       String?
+  ativo         Boolean  @default(true)
+  criadoEm      DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+}
+enum StatusLead {
+  NOVO
+  CONTATO
+  QUALIFICADO
+  PERDIDO
+  CONVERTIDO
+}
+
+model Lead {
+  id            Int        @id @default(autoincrement())
+  nome          String
+  email         String?
+  telefone      String?
+  empresa       String?
+  origem        String?
+  status        StatusLead @default(NOVO)
+  observacoes   String?
+  criadoEm      DateTime   @default(now())
+  atualizadoEm  DateTime   @updatedAt
+}
+enum StatusOportunidade {
+  ABERTA
+  PROPOSTA
+  NEGOCIACAO
+  GANHA
+  PERDIDA
+}
+
+model Oportunidade {
+  id            Int                @id @default(autoincrement())
+  titulo        String
+  cliente       String?
+  valor         Decimal            @db.Decimal(12, 2)
+  status        StatusOportunidade @default(ABERTA)
+  responsavel   String?
+  observacoes   String?
+  criadoEm      DateTime           @default(now())
+  atualizadoEm  DateTime           @updatedAt
+}

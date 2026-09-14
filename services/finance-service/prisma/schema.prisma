@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StatusContaReceber {
+  PENDENTE
+  PAGO
+  CANCELADO
+}
+
+model ContaReceber {
+  id           Int                @id @default(autoincrement())
+  pedidoId     Int                @unique
+  clienteNome  String
+  valor        Decimal            @db.Decimal(12, 2)
+  status       StatusContaReceber @default(PENDENTE)
+  origem       String             @default("ERP")
+  criadoEm     DateTime           @default(now())
+  atualizadoEm DateTime           @updatedAt
+}
