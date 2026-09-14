@@ -95,3 +95,30 @@ MVP funcional.
 **Deividi Luccas**  
 Desenvolvedor Full-Stack  
 GitHub: DeividiLuccasdev
+
+## Demonstração
+
+### Dashboard
+
+![Dashboard do SmartFlow AI](docs/images/dashboard.png)
+
+### CRM
+
+![CRM do SmartFlow AI](docs/images/crm.png)
+
+### ERP
+
+![ERP do SmartFlow AI](docs/images/erp.png)
+
+### Financeiro
+
+![Financeiro do SmartFlow AI](docs/images/financeiro.png)
+
+### Assistente IA
+
+![Assistente IA do SmartFlow AI](docs/images/ia.png)
+
+### Administração de usuários
+
+![Gerenciamento de usuários do SmartFlow AI](docs/images/usuarios.png)
+
