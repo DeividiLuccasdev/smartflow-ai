@@ -5,6 +5,9 @@ import { prisma } from "./config/prisma.js";
 
 const app = express();
 
+const ERP_SERVICE_URL =
+    process.env.ERP_SERVICE_URL || "http://localhost:3003";
+
 const PORT = process.env.PORT || 3002;
 
 app.use(cors());
@@ -580,7 +583,7 @@ app.put("/oportunidades/:id", async (req, res) => {
 
         if (oportunidadeAtualizada.status === "GANHA") {
             const respostaERP = await fetch(
-                "http://localhost:3003/integracoes/crm/oportunidades",
+                `${ERP_SERVICE_URL}/integracoes/crm/oportunidades`,
                 {
                     method: "POST",
                     headers: {

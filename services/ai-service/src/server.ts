@@ -5,6 +5,15 @@ import OpenAI from "openai";
 
 const app = express();
 
+const CRM_SERVICE_URL =
+    process.env.CRM_SERVICE_URL || "http://localhost:3002";
+
+const ERP_SERVICE_URL =
+    process.env.ERP_SERVICE_URL || "http://localhost:3003";
+
+const FINANCE_SERVICE_URL =
+    process.env.FINANCE_SERVICE_URL || "http://localhost:3004";
+
 const PORT = process.env.PORT || 3005;
 
 if (!process.env.OPENAI_API_KEY) {
@@ -39,15 +48,15 @@ app.post("/assistente", async (req, res) => {
             });
         }
 
-        const [
-            respostaCRM,
-            respostaERP,
-            respostaFinanceiro
-        ] = await Promise.all([
-            fetch("http://localhost:3002/oportunidades"),
-            fetch("http://localhost:3003/pedidos"),
-            fetch("http://localhost:3004/financeiro/resumo")
-        ]);
+     const [
+    respostaCRM,
+    respostaERP,
+    respostaFinanceiro
+] = await Promise.all([
+    fetch(`${CRM_SERVICE_URL}/oportunidades`),
+    fetch(`${ERP_SERVICE_URL}/pedidos`),
+    fetch(`${FINANCE_SERVICE_URL}/financeiro/resumo`)
+]);
 
         if (
             !respostaCRM.ok ||

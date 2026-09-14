@@ -6,6 +6,9 @@ import { prisma } from "./config/prisma.js";
 
 const app = express();
 
+const FINANCE_SERVICE_URL =
+    process.env.FINANCE_SERVICE_URL || "http://localhost:3004";
+
 const PORT = process.env.PORT || 3003;
 
 app.use(cors());
@@ -402,7 +405,7 @@ app.post("/pedidos/:id/confirmar", async (req, res) => {
                 });
 
         const respostaFinanceiro = await fetch(
-            "http://localhost:3004/integracoes/erp/pedidos",
+            `${FINANCE_SERVICE_URL}/integracoes/erp/pedidos`,
             {
                 method: "POST",
                 headers: {
