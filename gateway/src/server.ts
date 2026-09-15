@@ -28,6 +28,53 @@ const AI_SERVICE_URL =
     process.env.AI_SERVICE_URL || "http://localhost:3005";
 
 
+function aguardarServico(url: string) {
+    return async (
+        _req: Request,
+        res: Response,
+        next: NextFunction
+    ) => {
+        const maxTentativas = 8;
+
+        for (
+            let tentativa = 1;
+            tentativa <= maxTentativas;
+            tentativa++
+        ) {
+            try {
+                const resposta = await fetch(url, {
+                    signal: AbortSignal.timeout(10000)
+                });
+
+                // Qualquer resposta abaixo de 500 significa
+                // que o serviço já está acordado.
+                if (resposta.status < 500) {
+                    return next();
+                }
+
+                console.log(
+                    `Serviço ${url} iniciando - tentativa ${tentativa}/${maxTentativas}`
+                );
+            } catch (erro) {
+                console.log(
+                    `Aguardando ${url} - tentativa ${tentativa}/${maxTentativas}`
+                );
+            }
+
+            if (tentativa < maxTentativas) {
+                await new Promise(resolve =>
+                    setTimeout(resolve, 8000)
+                );
+            }
+        }
+
+        return res.status(503).json({
+            erro: "Serviço temporariamente indisponível. Tente novamente em instantes."
+        });
+    };
+}
+
+
 async function autenticar(
     req: Request,
     res: Response,
@@ -77,6 +124,7 @@ async function autenticar(
     }
 }
 
+
 function autorizarPerfis(...perfisPermitidos: string[]) {
     return (
         req: Request,
@@ -95,11 +143,14 @@ function autorizarPerfis(...perfisPermitidos: string[]) {
     };
 }
 
+
 app.use(cors());
 
 
+// AUTH
 app.use(
     "/auth",
+    aguardarServico(AUTH_SERVICE_URL),
     createProxyMiddleware({
         target: AUTH_SERVICE_URL,
         changeOrigin: true,
@@ -108,42 +159,13 @@ app.use(
         }
     })
 );
-app.get("/diagnostico/crm", async (_req, res) => {
-    try {
-        console.log("Testando CRM em:", CRM_SERVICE_URL);
-
-        const resposta = await fetch(
-            `${CRM_SERVICE_URL}/oportunidades`
-        );
-
-        const contentType =
-            resposta.headers.get("content-type") || "";
-
-        const corpo = await resposta.text();
-
-        return res.status(resposta.status).json({
-            destino: CRM_SERVICE_URL,
-            status: resposta.status,
-            contentType,
-            resposta: corpo.slice(0, 300)
-        });
-
-    } catch (erro) {
-        console.error("ERRO DIAGNOSTICO CRM:", erro);
-
-        return res.status(500).json({
-            erro: "Gateway não conseguiu acessar o CRM.",
-            detalhe:
-                erro instanceof Error
-                    ? erro.message
-                    : String(erro)
-        });
-    }
-});
 
 
+// CRM
 app.use(
     "/crm",
+    aguardarServico(AUTH_SERVICE_URL),
+    aguardarServico(CRM_SERVICE_URL),
     autenticar,
     autorizarPerfis("ADMIN", "VENDEDOR", "ATENDENTE"),
     createProxyMiddleware({
@@ -156,8 +178,11 @@ app.use(
 );
 
 
+// ERP
 app.use(
     "/erp",
+    aguardarServico(AUTH_SERVICE_URL),
+    aguardarServico(ERP_SERVICE_URL),
     autenticar,
     autorizarPerfis("ADMIN", "ATENDENTE"),
     createProxyMiddleware({
@@ -170,8 +195,11 @@ app.use(
 );
 
 
+// FINANCEIRO
 app.use(
     "/financeiro",
+    aguardarServico(AUTH_SERVICE_URL),
+    aguardarServico(FINANCE_SERVICE_URL),
     autenticar,
     autorizarPerfis("ADMIN"),
     createProxyMiddleware({
@@ -179,7 +207,10 @@ app.use(
         changeOrigin: true,
 
         pathRewrite: (path) => {
-            if (path === "/resumo" || path.startsWith("/resumo?")) {
+            if (
+                path === "/resumo" ||
+                path.startsWith("/resumo?")
+            ) {
                 return `/financeiro${path}`;
             }
 
@@ -189,8 +220,11 @@ app.use(
 );
 
 
+// IA
 app.use(
     "/ia",
+    aguardarServico(AUTH_SERVICE_URL),
+    aguardarServico(AI_SERVICE_URL),
     autenticar,
     autorizarPerfis("ADMIN", "VENDEDOR"),
     createProxyMiddleware({
@@ -206,7 +240,7 @@ app.use(
 app.use(express.json());
 
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
     return res.json({
         servico: "API Gateway",
         status: "online"
@@ -217,5 +251,3 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
     console.log(`API Gateway rodando na porta ${PORT}`);
 });
-
-
