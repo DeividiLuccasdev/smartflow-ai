@@ -127,3 +127,11 @@ GitHub: DeividiLuccasdev
 
 ![Login do SmartFlow AI](docs/images/login.png)
 
+
+## 🌐 Demo Online
+
+Acesse o SmartFlow AI em produção:
+
+https://smartflow-ai-frontend.onrender.com
+
+> O projeto utiliza serviços gratuitos do Render. No primeiro acesso, alguns microserviços podem levar alguns segundos para iniciar.
