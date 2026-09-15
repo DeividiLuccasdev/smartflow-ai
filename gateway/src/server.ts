@@ -28,13 +28,23 @@ const AI_SERVICE_URL =
     process.env.AI_SERVICE_URL || "http://localhost:3005";
 
 
+const servicosAtivos = new Map<string, number>();
+
 function aguardarServico(url: string) {
     return async (
         _req: Request,
         res: Response,
         next: NextFunction
     ) => {
-        const maxTentativas = 8;
+        const agora = Date.now();
+        const ativoAte = servicosAtivos.get(url) || 0;
+
+        // Já verificamos recentemente: segue direto
+        if (agora < ativoAte) {
+            return next();
+        }
+
+        const maxTentativas = 6;
 
         for (
             let tentativa = 1;
@@ -43,19 +53,24 @@ function aguardarServico(url: string) {
         ) {
             try {
                 const resposta = await fetch(url, {
-                    signal: AbortSignal.timeout(10000)
+                    signal: AbortSignal.timeout(8000)
                 });
 
-                // Qualquer resposta abaixo de 500 significa
-                // que o serviço já está acordado.
                 if (resposta.status < 500) {
+                    // Evita nova verificação por 5 minutos
+                    servicosAtivos.set(
+                        url,
+                        Date.now() + 5 * 60 * 1000
+                    );
+
                     return next();
                 }
 
                 console.log(
                     `Serviço ${url} iniciando - tentativa ${tentativa}/${maxTentativas}`
                 );
-            } catch (erro) {
+
+            } catch {
                 console.log(
                     `Aguardando ${url} - tentativa ${tentativa}/${maxTentativas}`
                 );
@@ -63,7 +78,7 @@ function aguardarServico(url: string) {
 
             if (tentativa < maxTentativas) {
                 await new Promise(resolve =>
-                    setTimeout(resolve, 8000)
+                    setTimeout(resolve, 5000)
                 );
             }
         }
