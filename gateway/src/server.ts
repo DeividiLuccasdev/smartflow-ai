@@ -108,6 +108,38 @@ app.use(
         }
     })
 );
+app.get("/diagnostico/crm", async (_req, res) => {
+    try {
+        console.log("Testando CRM em:", CRM_SERVICE_URL);
+
+        const resposta = await fetch(
+            `${CRM_SERVICE_URL}/oportunidades`
+        );
+
+        const contentType =
+            resposta.headers.get("content-type") || "";
+
+        const corpo = await resposta.text();
+
+        return res.status(resposta.status).json({
+            destino: CRM_SERVICE_URL,
+            status: resposta.status,
+            contentType,
+            resposta: corpo.slice(0, 300)
+        });
+
+    } catch (erro) {
+        console.error("ERRO DIAGNOSTICO CRM:", erro);
+
+        return res.status(500).json({
+            erro: "Gateway não conseguiu acessar o CRM.",
+            detalhe:
+                erro instanceof Error
+                    ? erro.message
+                    : String(erro)
+        });
+    }
+});
 
 
 app.use(
