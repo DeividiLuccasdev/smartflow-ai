@@ -9,6 +9,59 @@ const app = express();
 const FINANCE_SERVICE_URL =
     process.env.FINANCE_SERVICE_URL || "http://localhost:3004";
 
+
+async function fetchComRetry(
+    url: string,
+    init: RequestInit = {},
+    maxTentativas = 6
+): Promise<Response> {
+
+    let ultimoErro: unknown;
+
+    for (
+        let tentativa = 1;
+        tentativa <= maxTentativas;
+        tentativa++
+    ) {
+        try {
+            const resposta = await fetch(url, {
+                ...init,
+                signal: AbortSignal.timeout(10000)
+            });
+
+            if (resposta.status < 500) {
+                return resposta;
+            }
+
+            if (tentativa === maxTentativas) {
+                return resposta;
+            }
+
+            console.log(
+                `Tentativa ${tentativa}/${maxTentativas} para ${url} retornou ${resposta.status}`
+            );
+
+        } catch (erro) {
+            ultimoErro = erro;
+
+            console.log(
+                `Tentativa ${tentativa}/${maxTentativas} falhou para ${url}`
+            );
+
+            if (tentativa === maxTentativas) {
+                throw erro;
+            }
+        }
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 5000)
+        );
+    }
+
+    throw ultimoErro ?? new Error(
+        `Não foi possível acessar ${url}`
+    );
+}
 const PORT = process.env.PORT || 3003;
 
 app.use(cors());
@@ -404,7 +457,7 @@ app.post("/pedidos/:id/confirmar", async (req, res) => {
                     }
                 });
 
-        const respostaFinanceiro = await fetch(
+        const respostaFinanceiro = await fetchComRetry(
             `${FINANCE_SERVICE_URL}/integracoes/erp/pedidos`,
             {
                 method: "POST",

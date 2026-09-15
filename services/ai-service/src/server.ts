@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import OpenAI from "openai";
@@ -14,6 +14,59 @@ const ERP_SERVICE_URL =
 const FINANCE_SERVICE_URL =
     process.env.FINANCE_SERVICE_URL || "http://localhost:3004";
 
+
+async function fetchComRetry(
+    url: string,
+    init: RequestInit = {},
+    maxTentativas = 6
+): Promise<Response> {
+
+    let ultimoErro: unknown;
+
+    for (
+        let tentativa = 1;
+        tentativa <= maxTentativas;
+        tentativa++
+    ) {
+        try {
+            const resposta = await fetch(url, {
+                ...init,
+                signal: AbortSignal.timeout(10000)
+            });
+
+            if (resposta.status < 500) {
+                return resposta;
+            }
+
+            if (tentativa === maxTentativas) {
+                return resposta;
+            }
+
+            console.log(
+                `Tentativa ${tentativa}/${maxTentativas} para ${url} retornou ${resposta.status}`
+            );
+
+        } catch (erro) {
+            ultimoErro = erro;
+
+            console.log(
+                `Tentativa ${tentativa}/${maxTentativas} falhou para ${url}`
+            );
+
+            if (tentativa === maxTentativas) {
+                throw erro;
+            }
+        }
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 5000)
+        );
+    }
+
+    throw ultimoErro ?? new Error(
+        `Não foi possível acessar ${url}`
+    );
+}
 const PORT = process.env.PORT || 3005;
 
 if (!process.env.OPENAI_API_KEY) {
@@ -53,9 +106,9 @@ app.post("/assistente", async (req, res) => {
     respostaERP,
     respostaFinanceiro
 ] = await Promise.all([
-    fetch(`${CRM_SERVICE_URL}/oportunidades`),
-    fetch(`${ERP_SERVICE_URL}/pedidos`),
-    fetch(`${FINANCE_SERVICE_URL}/financeiro/resumo`)
+    fetchComRetry(`${CRM_SERVICE_URL}/oportunidades`),
+    fetchComRetry(`${ERP_SERVICE_URL}/pedidos`),
+    fetchComRetry(`${FINANCE_SERVICE_URL}/financeiro/resumo`)
 ]);
 
         if (
