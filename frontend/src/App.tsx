@@ -231,7 +231,7 @@ function SistemaApp() {
         className="logout-button"
         onClick={() => {
           removerToken();
-          window.location.href = "/login";
+          window.location.href = "/";
         }}
       >
         Sair
