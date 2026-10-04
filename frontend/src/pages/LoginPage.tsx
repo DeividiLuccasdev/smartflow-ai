@@ -1,6 +1,11 @@
-﻿import { useState, type FormEvent } from "react";
+﻿import { useEffect, useState, type FormEvent } from "react";
 
-import { API_URL, salvarToken } from "../services/api";
+import {
+  API_URL,
+  acordarServicos,
+  fetchAguardandoServicos,
+  salvarToken,
+} from "../services/api";
 
 type LoginResposta = {
   mensagem: string;
@@ -20,15 +25,22 @@ function LoginPage() {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [aguardando, setAguardando] = useState(false);
+
+  // Começa a acordar os serviços enquanto o usuário digita
+  useEffect(() => {
+    acordarServicos();
+  }, []);
 
   async function entrar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
 
     try {
       setCarregando(true);
+      setAguardando(false);
       setErro("");
 
-      const resposta = await fetch(`${API_URL}/auth/login`, {
+      const resposta = await fetchAguardandoServicos(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,7 +49,7 @@ function LoginPage() {
           email,
           senha,
         }),
-      });
+      }, () => setAguardando(true));
 
       const dados = await resposta.json();
 
@@ -67,6 +79,7 @@ function LoginPage() {
       );
     } finally {
       setCarregando(false);
+      setAguardando(false);
     }
   }
 
@@ -89,6 +102,13 @@ function LoginPage() {
         </div>
 
         {erro && <div className="error-box">{erro}</div>}
+
+        {aguardando && (
+          <div className="info-box">
+            Iniciando os serviços. No primeiro acesso isso pode levar até
+            1 minuto (plano gratuito do Render)…
+          </div>
+        )}
 
         <form className="login-form" onSubmit={entrar}>
           <div className="form-group">

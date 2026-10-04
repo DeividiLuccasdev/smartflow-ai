@@ -112,7 +112,9 @@ async function verificarServico(
 
     const verificacao = (async () => {
 
-        const maxTentativas = 6;
+        // No plano gratuito do Render um serviço adormecido pode levar
+        // mais de 1 minuto para subir: até ~3 min de espera no total.
+        const maxTentativas = 8;
 
         const atrasos = [
             2000,
@@ -146,7 +148,7 @@ async function verificarServico(
                         },
 
                         signal:
-                            AbortSignal.timeout(12000)
+                            AbortSignal.timeout(20000)
                     }
                 );
 
@@ -388,7 +390,32 @@ function proxyPara(
 }
 
 
+// Começa a acordar todos os microsserviços em paralelo, sem esperar.
+// Assim, quando o usuário terminar o login, CRM, ERP, Financeiro e IA
+// já estão subindo, em vez de acordarem um por vez a cada tela aberta.
+function acordarTodos() {
+    for (const url of [
+        AUTH_SERVICE_URL,
+        CRM_SERVICE_URL,
+        ERP_SERVICE_URL,
+        FINANCE_SERVICE_URL,
+        AI_SERVICE_URL
+    ]) {
+        void verificarServico(url).catch(() => false);
+    }
+}
+
+
 app.use(cors());
+
+// Chamado pelo frontend ao abrir a tela de login.
+app.get("/acordar", (_req, res) => {
+    acordarTodos();
+
+    return res.status(202).json({
+        mensagem: "Acordando os serviços."
+    });
+});
 
 // Ignora cabeçalhos internos enviados pelo cliente:
 // eles só podem ser definidos pelo próprio Gateway.
@@ -483,4 +510,8 @@ app.get("/", (_req, res) => {
 
 app.listen(PORT, () => {
     console.log(`API Gateway rodando na porta ${PORT}`);
+
+    // Se o Gateway acabou de acordar, os serviços quase certamente
+    // também estão dormindo.
+    acordarTodos();
 });
