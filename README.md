@@ -44,7 +44,18 @@ Frontend: :5173
 
 **Backend:** Node.js, TypeScript, Express, Prisma ORM, PostgreSQL, JWT e bcrypt
 
-**IA:** OpenAI API integrada aos dados de CRM, ERP e Financeiro
+**IA:** qualquer API compatível com a OpenAI (Groq, Gemini, OpenRouter ou OpenAI), integrada aos dados de CRM, ERP e Financeiro
+
+### Configurando o assistente de IA
+
+O provedor é definido por variáveis de ambiente do `ai-service`. Exemplo com o
+plano gratuito do [Groq](https://console.groq.com):
+
+    AI_API_KEY=sua_chave_groq
+    AI_BASE_URL=https://api.groq.com/openai/v1
+    AI_MODEL=openai/gpt-oss-120b
+
+Para usar a OpenAI, deixe `AI_BASE_URL` vazio e informe um modelo da OpenAI em `AI_MODEL`.
 
 **Infraestrutura:** Docker, Git, GitHub e GitHub Actions (typecheck de todos os serviços, lint e build do frontend)
 

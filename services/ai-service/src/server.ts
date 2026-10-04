@@ -78,13 +78,31 @@ async function fetchComRetry(
 }
 const PORT = process.env.PORT || 3005;
 
-if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY não configurada.");
+// Provedor de IA configurável: qualquer API compatível com a OpenAI
+// (Groq, Gemini, OpenRouter ou a própria OpenAI).
+// OPENAI_API_KEY continua aceita para não quebrar configurações antigas.
+const AI_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
+const AI_BASE_URL = process.env.AI_BASE_URL || undefined;
+const AI_MODEL = process.env.AI_MODEL || "gpt-5.6-luna";
+
+if (!AI_API_KEY) {
+    throw new Error("AI_API_KEY não configurada.");
 }
 
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
+    apiKey: AI_API_KEY,
+    ...(AI_BASE_URL ? { baseURL: AI_BASE_URL } : {})
 });
+
+// Limita a quantidade de registros enviados à IA: mantém a requisição
+// dentro dos limites de tokens dos planos gratuitos.
+const MAX_REGISTROS_CONTEXTO = 50;
+
+function ultimosRegistros(dados: unknown) {
+    return Array.isArray(dados)
+        ? dados.slice(0, MAX_REGISTROS_CONTEXTO)
+        : dados;
+}
 
 app.use(cors());
 app.use(exigirChaveInterna);
@@ -157,9 +175,11 @@ app.post("/assistente", async (req, res) => {
 
             contexto = {
                 crm: {
-                    oportunidades
+                    oportunidades: ultimosRegistros(oportunidades)
                 },
-                ...(acesso.erp ? { erp: { pedidos } } : {}),
+                ...(acesso.erp
+                    ? { erp: { pedidos: ultimosRegistros(pedidos) } }
+                    : {}),
                 ...(acesso.financeiro ? { financeiro } : {})
             };
 
@@ -171,10 +191,13 @@ app.post("/assistente", async (req, res) => {
             });
         }
 
-        const respostaIA = await openai.responses.create({
-            model: "gpt-5.6-luna",
+        const respostaIA = await openai.chat.completions.create({
+            model: AI_MODEL,
 
-            instructions: `
+            messages: [
+                {
+                    role: "system",
+                    content: `
 Você é o Assistente Empresarial do SmartFlow AI.
 
 Responda sempre em português do Brasil.
@@ -190,9 +213,11 @@ Regras:
 - Se os dados forem insuficientes, diga claramente que não há informação suficiente.
 - Você só recebe os módulos que o perfil do usuário pode acessar. Se a pergunta
   for sobre um módulo ausente nos dados, informe que o perfil não tem acesso a ele.
-            `.trim(),
-
-            input: `
+            `.trim()
+                },
+                {
+                    role: "user",
+                    content: `
 DADOS ATUAIS DO SMARTFLOW:
 
 ${JSON.stringify(contexto, null, 2)}
@@ -200,15 +225,33 @@ ${JSON.stringify(contexto, null, 2)}
 PERGUNTA DO USUÁRIO:
 
 ${pergunta}
-            `.trim()
+                    `.trim()
+                }
+            ]
         });
 
         return res.json({
             pergunta,
-            resposta: respostaIA.output_text
+            resposta: respostaIA.choices[0]?.message?.content ?? ""
         });
 
     } catch (erro) {
+        // Falta de crédito, limite de uso ou chave inválida no provedor:
+        // não é um erro do SmartFlow, então o usuário recebe uma mensagem clara.
+        if (
+            erro instanceof OpenAI.APIError &&
+            (erro.status === 401 || erro.status === 403 || erro.status === 429)
+        ) {
+            console.error(
+                `Provedor de IA recusou a requisição (${erro.status}, ` +
+                `${erro.code ?? erro.type ?? "sem código"}): ${erro.message}`
+            );
+
+            return res.status(503).json({
+                erro: "Assistente temporariamente indisponível. Tente novamente em alguns minutos."
+            });
+        }
+
         console.error("Erro no AI Service:", erro);
 
         return res.status(500).json({
