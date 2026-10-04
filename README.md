@@ -2,6 +2,14 @@
 
 Plataforma empresarial Full-Stack baseada em microsserviços, integrando CRM, ERP, Financeiro, autenticação, controle de usuários e Inteligência Artificial.
 
+## 🌐 Demo Online
+
+Acesse o SmartFlow AI em produção:
+
+https://smartflow-ai-frontend.onrender.com
+
+> ⏳ **O primeiro acesso pode demorar 1 minuto ou mais.** O projeto usa o plano gratuito do Render, que "adormece" os serviços após 15 minutos sem uso, e cada microsserviço acorda separadamente. Depois disso, tudo responde normalmente.
+
 ## Funcionalidades
 
 - Dashboard empresarial
@@ -157,11 +165,3 @@ GitHub: DeividiLuccasdev
 
 ![Login do SmartFlow AI](docs/images/login.png)
 
-
-## 🌐 Demo Online
-
-Acesse o SmartFlow AI em produção:
-
-https://smartflow-ai-frontend.onrender.com
-
-> O projeto utiliza serviços gratuitos do Render. No primeiro acesso, alguns microserviços podem levar alguns segundos para iniciar.
