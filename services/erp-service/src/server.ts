@@ -3,6 +3,11 @@ import cors from "cors";
 import "dotenv/config";
 
 import { prisma } from "./config/prisma.js";
+import {
+    CABECALHO_CHAVE_INTERNA,
+    CHAVE_INTERNA,
+    exigirChaveInterna
+} from "./middlewares/chaveInterna.js";
 
 const app = express();
 
@@ -24,8 +29,12 @@ async function fetchComRetry(
         tentativa++
     ) {
         try {
+            const headers = new Headers(init.headers);
+            headers.set(CABECALHO_CHAVE_INTERNA, CHAVE_INTERNA);
+
             const resposta = await fetch(url, {
                 ...init,
+                headers,
                 signal: AbortSignal.timeout(10000)
             });
 
@@ -65,6 +74,7 @@ async function fetchComRetry(
 const PORT = process.env.PORT || 3003;
 
 app.use(cors());
+app.use(exigirChaveInterna);
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -294,6 +304,12 @@ app.get("/pedidos", async (req, res) => {
         });
     }
 });
+class EstoqueInsuficiente extends Error {
+    constructor(public produtoId: number) {
+        super(`Estoque insuficiente para o produto ${produtoId}.`);
+    }
+}
+
 app.post("/pedidos", async (req, res) => {
     try {
         const {
@@ -313,37 +329,55 @@ app.post("/pedidos", async (req, res) => {
             });
         }
 
-            const itensPedido: {
-                produtoId: number;
-                quantidade: number;
-                precoUnit: number;
-            }[] = [];
-            let valorTotal = 0;
+        // Soma as quantidades por produto: o mesmo produto em dois itens
+        // precisa ser conferido contra o estoque pelo total.
+        const quantidadesPorProduto = new Map<number, number>();
 
         for (const item of itens) {
+            const produtoId = Number(item?.produtoId);
+            const quantidade = Number(item?.quantidade);
+
+            if (!Number.isInteger(produtoId) || produtoId <= 0) {
+                return res.status(400).json({
+                    erro: "Produto inválido."
+                });
+            }
+
+            if (!Number.isInteger(quantidade) || quantidade <= 0) {
+                return res.status(400).json({
+                    erro: "Quantidade inválida."
+                });
+            }
+
+            quantidadesPorProduto.set(
+                produtoId,
+                (quantidadesPorProduto.get(produtoId) ?? 0) + quantidade
+            );
+        }
+
+        const itensPedido: {
+            produtoId: number;
+            quantidade: number;
+            precoUnit: number;
+        }[] = [];
+        let valorTotal = 0;
+
+        for (const [produtoId, quantidade] of quantidadesPorProduto) {
             const produto = await prisma.produto.findUnique({
                 where: {
-                    id: Number(item.produtoId)
+                    id: produtoId
                 }
             });
 
             if (!produto) {
                 return res.status(404).json({
-                    erro: `Produto ${item.produtoId} não encontrado.`
+                    erro: `Produto ${produtoId} não encontrado.`
                 });
             }
 
             if (!produto.ativo) {
                 return res.status(400).json({
                     erro: `Produto ${produto.nome} está inativo.`
-                });
-            }
-
-            const quantidade = Number(item.quantidade);
-
-            if (!Number.isInteger(quantidade) || quantidade <= 0) {
-                return res.status(400).json({
-                    erro: "Quantidade inválida."
                 });
             }
 
@@ -364,39 +398,59 @@ app.post("/pedidos", async (req, res) => {
             });
         }
 
-        const pedido = await prisma.$transaction(async (tx) => {
-            const novoPedido = await tx.pedido.create({
-                data: {
-                    clienteNome,
-                    valorTotal,
-                    itens: {
-                        create: itensPedido
-                    }
-                },
-                include: {
-                    itens: {
-                        include: {
-                            produto: true
+        let pedido;
+
+        try {
+            pedido = await prisma.$transaction(async (tx) => {
+                // Baixa o estoque só se ainda houver saldo: evita estoque
+                // negativo quando dois pedidos são feitos ao mesmo tempo.
+                for (const item of itensPedido) {
+                    const baixa = await tx.produto.updateMany({
+                        where: {
+                            id: item.produtoId,
+                            estoque: {
+                                gte: item.quantidade
+                            }
+                        },
+                        data: {
+                            estoque: {
+                                decrement: item.quantidade
+                            }
                         }
+                    });
+
+                    if (baixa.count === 0) {
+                        throw new EstoqueInsuficiente(item.produtoId);
                     }
                 }
-            });
 
-            for (const item of itensPedido) {
-                await tx.produto.update({
-                    where: {
-                        id: item.produtoId
-                    },
+                return tx.pedido.create({
                     data: {
-                        estoque: {
-                            decrement: item.quantidade
+                        clienteNome,
+                        valorTotal,
+                        itens: {
+                            create: itensPedido
+                        }
+                    },
+                    include: {
+                        itens: {
+                            include: {
+                                produto: true
+                            }
                         }
                     }
                 });
+            });
+
+        } catch (erro) {
+            if (erro instanceof EstoqueInsuficiente) {
+                return res.status(400).json({
+                    erro: `Estoque insuficiente para o produto ${erro.produtoId}.`
+                });
             }
 
-            return novoPedido;
-        });
+            throw erro;
+        }
 
         return res.status(201).json({
             mensagem: "Pedido criado com sucesso.",
@@ -522,6 +576,33 @@ app.post("/pedidos/:id/cancelar", async (req, res) => {
             return res.status(400).json({
                 erro: "Este pedido já está cancelado."
             });
+        }
+
+        // Pedido já enviado ao Financeiro: cancela a conta a receber antes
+        if (
+            pedido.status === "CONFIRMADO" ||
+            pedido.status === "FATURADO"
+        ) {
+            const respostaFinanceiro = await fetchComRetry(
+                `${FINANCE_SERVICE_URL}/integracoes/erp/pedidos/${pedido.id}/cancelar`,
+                {
+                    method: "POST"
+                }
+            );
+
+            if (respostaFinanceiro.status === 409) {
+                return res.status(400).json({
+                    erro: "Pedido com conta a receber já paga não pode ser cancelado."
+                });
+            }
+
+            if (!respostaFinanceiro.ok) {
+                const erroFinanceiro = await respostaFinanceiro.text();
+
+                throw new Error(
+                    `Erro ao cancelar conta no Financeiro: ${erroFinanceiro}`
+                );
+            }
         }
 
         await prisma.$transaction(async (tx) => {

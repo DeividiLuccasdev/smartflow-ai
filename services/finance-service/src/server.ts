@@ -3,12 +3,14 @@ import cors from "cors";
 import "dotenv/config";
 
 import { prisma } from "./config/prisma.js";
+import { exigirChaveInterna } from "./middlewares/chaveInterna.js";
 
 const app = express();
 
 const PORT = process.env.PORT || 3004;
 
 app.use(cors());
+app.use(exigirChaveInterna);
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -92,6 +94,67 @@ app.post("/integracoes/erp/pedidos", async (req, res) => {
 
         return res.status(500).json({
             erro: "Erro interno ao integrar pedido com Financeiro."
+        });
+    }
+});
+
+// Chamado pelo ERP quando um pedido é cancelado.
+// Cancela a conta a receber do pedido, se ela ainda estiver pendente.
+app.post("/integracoes/erp/pedidos/:pedidoId/cancelar", async (req, res) => {
+    try {
+        const pedidoId = Number(req.params.pedidoId);
+
+        if (!Number.isInteger(pedidoId) || pedidoId <= 0) {
+            return res.status(400).json({
+                erro: "ID de pedido inválido."
+            });
+        }
+
+        const conta = await prisma.contaReceber.findUnique({
+            where: {
+                pedidoId
+            }
+        });
+
+        if (!conta) {
+            return res.status(200).json({
+                mensagem: "Este pedido não possui conta a receber."
+            });
+        }
+
+        if (conta.status === "PAGO") {
+            return res.status(409).json({
+                erro: "A conta deste pedido já foi paga.",
+                conta
+            });
+        }
+
+        if (conta.status === "CANCELADO") {
+            return res.status(200).json({
+                mensagem: "A conta deste pedido já está cancelada.",
+                conta
+            });
+        }
+
+        const contaCancelada = await prisma.contaReceber.update({
+            where: {
+                id: conta.id
+            },
+            data: {
+                status: "CANCELADO"
+            }
+        });
+
+        return res.json({
+            mensagem: "Conta a receber do pedido cancelada.",
+            conta: contaCancelada
+        });
+
+    } catch (erro) {
+        console.error(erro);
+
+        return res.status(500).json({
+            erro: "Erro interno ao cancelar conta do pedido."
         });
     }
 });

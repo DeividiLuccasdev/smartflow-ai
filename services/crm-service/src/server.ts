@@ -2,6 +2,11 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import { prisma } from "./config/prisma.js";
+import {
+    CABECALHO_CHAVE_INTERNA,
+    CHAVE_INTERNA,
+    exigirChaveInterna
+} from "./middlewares/chaveInterna.js";
 
 const app = express();
 
@@ -23,8 +28,12 @@ async function fetchComRetry(
         tentativa++
     ) {
         try {
+            const headers = new Headers(init.headers);
+            headers.set(CABECALHO_CHAVE_INTERNA, CHAVE_INTERNA);
+
             const resposta = await fetch(url, {
                 ...init,
+                headers,
                 signal: AbortSignal.timeout(10000)
             });
 
@@ -64,6 +73,7 @@ async function fetchComRetry(
 const PORT = process.env.PORT || 3002;
 
 app.use(cors());
+app.use(exigirChaveInterna);
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -620,21 +630,24 @@ app.put("/oportunidades/:id", async (req, res) => {
             });
         }
 
-               const oportunidadeAtualizada = await prisma.oportunidade.update({
-            where: {
-                id
-            },
-            data: {
-                titulo: titulo ?? oportunidadeExistente.titulo,
-                cliente: cliente ?? oportunidadeExistente.cliente,
-                valor: valor ?? oportunidadeExistente.valor,
-                status: status ?? oportunidadeExistente.status,
-                responsavel: responsavel ?? oportunidadeExistente.responsavel,
-                observacoes: observacoes ?? oportunidadeExistente.observacoes
-            }
-        });
+        const dados = {
+            titulo: titulo ?? oportunidadeExistente.titulo,
+            cliente: cliente ?? oportunidadeExistente.cliente,
+            valor: valor ?? oportunidadeExistente.valor,
+            status: status ?? oportunidadeExistente.status,
+            responsavel: responsavel ?? oportunidadeExistente.responsavel,
+            observacoes: observacoes ?? oportunidadeExistente.observacoes
+        };
 
-        if (oportunidadeAtualizada.status === "GANHA") {
+        // Oportunidade ganha gera um pedido no ERP. A integração é feita
+        // antes de salvar: se o ERP recusar, a oportunidade não muda.
+        if (dados.status === "GANHA") {
+            if (!dados.cliente || !String(dados.cliente).trim()) {
+                return res.status(400).json({
+                    erro: "Informe o cliente antes de marcar a oportunidade como ganha."
+                });
+            }
+
             const respostaERP = await fetchComRetry(
                 `${ERP_SERVICE_URL}/integracoes/crm/oportunidades`,
                 {
@@ -643,9 +656,9 @@ app.put("/oportunidades/:id", async (req, res) => {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        oportunidadeId: oportunidadeAtualizada.id,
-                        clienteNome: oportunidadeAtualizada.cliente,
-                        valorTotal: Number(oportunidadeAtualizada.valor)
+                        oportunidadeId: id,
+                        clienteNome: dados.cliente,
+                        valorTotal: Number(dados.valor)
                     })
                 }
             );
@@ -653,11 +666,22 @@ app.put("/oportunidades/:id", async (req, res) => {
             if (!respostaERP.ok) {
                 const erroERP = await respostaERP.text();
 
-                throw new Error(
+                console.error(
                     `Erro ao integrar oportunidade com ERP: ${erroERP}`
                 );
+
+                return res.status(502).json({
+                    erro: "Não foi possível gerar o pedido no ERP. A oportunidade não foi alterada."
+                });
             }
         }
+
+        const oportunidadeAtualizada = await prisma.oportunidade.update({
+            where: {
+                id
+            },
+            data: dados
+        });
 
         return res.json({
             mensagem: "Oportunidade atualizada com sucesso.",

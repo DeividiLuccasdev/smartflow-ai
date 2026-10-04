@@ -47,7 +47,24 @@ services:
     volumes:
       - erp_postgres_data:/var/lib/postgresql/data
 
+  finance-db:
+    image: postgres:16
+    container_name: smartflow-finance-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: smartflow
+      POSTGRES_PASSWORD: smartflow123
+      POSTGRES_DB: smartflow_finance
+
+    ports:
+      - "5436:5432"
+
+    volumes:
+      - finance_postgres_data:/var/lib/postgresql/data
+
 volumes:
   auth_postgres_data:
   crm_postgres_data:
   erp_postgres_data:
+  finance_postgres_data:

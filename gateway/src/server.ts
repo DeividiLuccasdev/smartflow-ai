@@ -6,7 +6,11 @@
 
 import cors from "cors";
 import "dotenv/config";
-import { createProxyMiddleware } from "http-proxy-middleware";
+import type { ClientRequest } from "node:http";
+import {
+    createProxyMiddleware,
+    type Options
+} from "http-proxy-middleware";
 
 const app = express();
 
@@ -26,6 +30,24 @@ const FINANCE_SERVICE_URL =
 
 const AI_SERVICE_URL =
     process.env.AI_SERVICE_URL || "http://localhost:3005";
+
+// Chave compartilhada com os microsserviços: só quem a conhece
+// (o Gateway e os próprios serviços) consegue chamá-los.
+const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY ?? "";
+
+if (!INTERNAL_API_KEY) {
+    throw new Error("INTERNAL_API_KEY não configurada.");
+}
+
+const CABECALHO_CHAVE_INTERNA = "x-internal-key";
+const CABECALHO_USUARIO_ID = "x-usuario-id";
+const CABECALHO_USUARIO_PERFIL = "x-usuario-perfil";
+
+const CABECALHOS_INTERNOS = [
+    CABECALHO_CHAVE_INTERNA,
+    CABECALHO_USUARIO_ID,
+    CABECALHO_USUARIO_PERFIL
+];
 
 
 const servicosAtivos = new Map<string, number>();
@@ -276,7 +298,8 @@ async function autenticar(
             {
                 method: "GET",
                 headers: {
-                    Authorization: authorization
+                    Authorization: authorization,
+                    [CABECALHO_CHAVE_INTERNA]: INTERNAL_API_KEY
                 }
             }
         );
@@ -289,6 +312,7 @@ async function autenticar(
 
         const dados = await resposta.json() as {
             usuario?: {
+                usuarioId?: number;
                 perfil?: string;
             };
         };
@@ -326,19 +350,63 @@ function autorizarPerfis(...perfisPermitidos: string[]) {
 }
 
 
+// Cria o proxy para um microsserviço, enviando a chave interna
+// e os dados do usuário autenticado pelo Gateway.
+function proxyPara(
+    target: string,
+    pathRewrite: Options<Request, Response>["pathRewrite"]
+) {
+    return createProxyMiddleware<Request, Response>({
+        target,
+        changeOrigin: true,
+        ...(pathRewrite ? { pathRewrite } : {}),
+        on: {
+            proxyReq: (proxyReq: ClientRequest, _req, res) => {
+                proxyReq.setHeader(
+                    CABECALHO_CHAVE_INTERNA,
+                    INTERNAL_API_KEY
+                );
+
+                const usuario = res.locals.usuario;
+
+                if (usuario?.usuarioId !== undefined) {
+                    proxyReq.setHeader(
+                        CABECALHO_USUARIO_ID,
+                        String(usuario.usuarioId)
+                    );
+                }
+
+                if (usuario?.perfil) {
+                    proxyReq.setHeader(
+                        CABECALHO_USUARIO_PERFIL,
+                        usuario.perfil
+                    );
+                }
+            }
+        }
+    });
+}
+
+
 app.use(cors());
+
+// Ignora cabeçalhos internos enviados pelo cliente:
+// eles só podem ser definidos pelo próprio Gateway.
+app.use((req, _res, next) => {
+    for (const cabecalho of CABECALHOS_INTERNOS) {
+        delete req.headers[cabecalho];
+    }
+
+    next();
+});
 
 
 // AUTH
 app.use(
     "/auth",
     aguardarServico(AUTH_SERVICE_URL),
-    createProxyMiddleware({
-        target: AUTH_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: {
-            "^/auth": ""
-        }
+    proxyPara(AUTH_SERVICE_URL, {
+        "^/auth": ""
     })
 );
 
@@ -350,12 +418,8 @@ app.use(
     aguardarServico(CRM_SERVICE_URL),
     autenticar,
     autorizarPerfis("ADMIN", "VENDEDOR", "ATENDENTE"),
-    createProxyMiddleware({
-        target: CRM_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: {
-            "^/crm": ""
-        }
+    proxyPara(CRM_SERVICE_URL, {
+        "^/crm": ""
     })
 );
 
@@ -367,12 +431,8 @@ app.use(
     aguardarServico(ERP_SERVICE_URL),
     autenticar,
     autorizarPerfis("ADMIN", "ATENDENTE"),
-    createProxyMiddleware({
-        target: ERP_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: {
-            "^/erp": ""
-        }
+    proxyPara(ERP_SERVICE_URL, {
+        "^/erp": ""
     })
 );
 
@@ -384,20 +444,15 @@ app.use(
     aguardarServico(FINANCE_SERVICE_URL),
     autenticar,
     autorizarPerfis("ADMIN"),
-    createProxyMiddleware({
-        target: FINANCE_SERVICE_URL,
-        changeOrigin: true,
-
-        pathRewrite: (path) => {
-            if (
-                path === "/resumo" ||
-                path.startsWith("/resumo?")
-            ) {
-                return `/financeiro${path}`;
-            }
-
-            return path;
+    proxyPara(FINANCE_SERVICE_URL, (path) => {
+        if (
+            path === "/resumo" ||
+            path.startsWith("/resumo?")
+        ) {
+            return `/financeiro${path}`;
         }
+
+        return path;
     })
 );
 
@@ -409,12 +464,8 @@ app.use(
     aguardarServico(AI_SERVICE_URL),
     autenticar,
     autorizarPerfis("ADMIN", "VENDEDOR"),
-    createProxyMiddleware({
-        target: AI_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: {
-            "^/ia": ""
-        }
+    proxyPara(AI_SERVICE_URL, {
+        "^/ia": ""
     })
 );
 
