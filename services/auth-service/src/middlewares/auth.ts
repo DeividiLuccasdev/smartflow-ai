@@ -6,6 +6,8 @@ import type {
 
 import jwt from "jsonwebtoken";
 
+import { prisma } from "../config/prisma.js";
+
 export interface RequestAutenticada extends Request {
     usuario?: {
         usuarioId: number;
@@ -13,7 +15,7 @@ export interface RequestAutenticada extends Request {
     };
 }
 
-export function autenticarToken(
+export async function autenticarToken(
     req: RequestAutenticada,
     res: Response,
     next: NextFunction
@@ -40,24 +42,43 @@ export function autenticarToken(
         throw new Error("JWT_SECRET não configurado.");
     }
 
+    let dados: { usuarioId: number };
+
     try {
-        const dados = jwt.verify(token, segredo) as {
+        dados = jwt.verify(token, segredo) as {
             usuarioId: number;
-            perfil: string;
         };
-
-        req.usuario = {
-            usuarioId: dados.usuarioId,
-            perfil: dados.perfil
-        };
-
-        next();
-
     } catch {
         return res.status(401).json({
             erro: "Token inválido ou expirado."
         });
     }
+
+    // Consulta o banco a cada requisição: usuários desativados perdem
+    // o acesso na hora, e mudanças de perfil valem sem esperar o token expirar.
+    const usuario = await prisma.usuario.findUnique({
+        where: {
+            id: dados.usuarioId
+        },
+        select: {
+            id: true,
+            perfil: true,
+            ativo: true
+        }
+    });
+
+    if (!usuario || !usuario.ativo) {
+        return res.status(401).json({
+            erro: "Token inválido ou expirado."
+        });
+    }
+
+    req.usuario = {
+        usuarioId: usuario.id,
+        perfil: usuario.perfil
+    };
+
+    next();
 }
 export function autorizarPerfil(...perfisPermitidos: string[]) {
     return (

@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 import { prisma } from "./config/prisma.js";
+import { exigirChaveInterna } from "./middlewares/chaveInterna.js";
 
 import {
     autenticarToken,
@@ -23,6 +24,7 @@ if (!JWT_SECRET) {
 }
 
 app.use(cors());
+app.use(exigirChaveInterna);
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -250,12 +252,6 @@ app.post("/login", async (req, res) => {
             });
         }
 
-        if (!usuario.ativo) {
-            return res.status(403).json({
-                erro: "Usuário inativo."
-            });
-        }
-
         const senhaValida = await bcrypt.compare(
             senha,
             usuario.senhaHash
@@ -264,6 +260,14 @@ app.post("/login", async (req, res) => {
         if (!senhaValida) {
             return res.status(401).json({
                 erro: "E-mail ou senha inválidos."
+            });
+        }
+
+        // Só informa que o usuário está inativo depois de validar a senha,
+        // para não revelar a terceiros quais e-mails estão cadastrados.
+        if (!usuario.ativo) {
+            return res.status(403).json({
+                erro: "Usuário inativo."
             });
         }
 
