@@ -60,15 +60,68 @@ export async function fetchAguardandoServicos(
     }
 
     aoAguardar?.();
+    acordarServicos();
     await esperar(INTERVALO_TENTATIVA_MS);
   }
 }
 
-// Pede ao Gateway para acordar todos os serviços de uma vez.
+const CHAVE_URLS_SERVICOS = "smartflow_servicos";
+const INTERVALO_ACORDAR_MS = 15000;
+let ultimoAcordar = 0;
+
+// Chama a rota "/" de cada microsserviço direto do navegador. No plano
+// gratuito o Render pode recusar (429) as chamadas do Gateway para acordar
+// os serviços, mas aceita as do navegador.
+function chamarServicos(urls: string[]) {
+  for (const url of urls) {
+    fetch(url, { mode: "no-cors" }).catch(() => {
+      // Só importa disparar a requisição: o serviço acorda ao recebê-la
+    });
+  }
+}
+
+function urlsSalvas(): string[] {
+  try {
+    const salvas = JSON.parse(
+      localStorage.getItem(CHAVE_URLS_SERVICOS) || "[]"
+    );
+
+    return Array.isArray(salvas) ? salvas : [];
+  } catch {
+    return [];
+  }
+}
+
+// Acorda o Gateway e todos os serviços de uma vez.
 export function acordarServicos() {
-  fetch(`${API_URL}/acordar`).catch(() => {
-    // O próprio Gateway pode estar dormindo; a requisição já o acorda
-  });
+  const agora = Date.now();
+
+  if (agora - ultimoAcordar < INTERVALO_ACORDAR_MS) {
+    return;
+  }
+
+  ultimoAcordar = agora;
+
+  // Em visitas seguintes já dá para acordar sem esperar o Gateway subir
+  chamarServicos(urlsSalvas());
+
+  fetch(`${API_URL}/acordar`)
+    .then((resposta) => resposta.json())
+    .then((dados: { servicos?: string[] }) => {
+      if (!Array.isArray(dados.servicos)) {
+        return;
+      }
+
+      localStorage.setItem(
+        CHAVE_URLS_SERVICOS,
+        JSON.stringify(dados.servicos)
+      );
+
+      chamarServicos(dados.servicos);
+    })
+    .catch(() => {
+      // O próprio Gateway pode estar dormindo; a requisição já o acorda
+    });
 }
 
 export async function apiFetch(

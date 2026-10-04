@@ -390,17 +390,19 @@ function proxyPara(
 }
 
 
+const URLS_SERVICOS = [
+    AUTH_SERVICE_URL,
+    CRM_SERVICE_URL,
+    ERP_SERVICE_URL,
+    FINANCE_SERVICE_URL,
+    AI_SERVICE_URL
+];
+
 // Começa a acordar todos os microsserviços em paralelo, sem esperar.
 // Assim, quando o usuário terminar o login, CRM, ERP, Financeiro e IA
 // já estão subindo, em vez de acordarem um por vez a cada tela aberta.
 function acordarTodos() {
-    for (const url of [
-        AUTH_SERVICE_URL,
-        CRM_SERVICE_URL,
-        ERP_SERVICE_URL,
-        FINANCE_SERVICE_URL,
-        AI_SERVICE_URL
-    ]) {
+    for (const url of URLS_SERVICOS) {
         void verificarServico(url).catch(() => false);
     }
 }
@@ -409,11 +411,16 @@ function acordarTodos() {
 app.use(cors());
 
 // Chamado pelo frontend ao abrir a tela de login.
+// No plano gratuito o Render pode responder 429 às chamadas que o
+// Gateway faz para acordar os outros serviços, mas aceita as do
+// navegador: por isso as URLs voltam para o frontend chamar também.
+// Só a rota "/" de cada serviço é pública; o resto exige a chave interna.
 app.get("/acordar", (_req, res) => {
     acordarTodos();
 
     return res.status(202).json({
-        mensagem: "Acordando os serviços."
+        mensagem: "Acordando os serviços.",
+        servicos: URLS_SERVICOS.filter((url) => url.startsWith("https://"))
     });
 });
 
