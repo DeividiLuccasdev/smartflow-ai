@@ -154,6 +154,14 @@ h1 {
   color: #991b1b;
 }
 
+.info-box {
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
