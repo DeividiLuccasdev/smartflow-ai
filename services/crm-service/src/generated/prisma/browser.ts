@@ -32,3 +32,13 @@ export type Lead = Prisma.LeadModel
  * 
  */
 export type Oportunidade = Prisma.OportunidadeModel
+/**
+ * Model EventoOutbox
+ * 
+ */
+export type EventoOutbox = Prisma.EventoOutboxModel
+/**
+ * Model ChaveIdempotencia
+ * 
+ */
+export type ChaveIdempotencia = Prisma.ChaveIdempotenciaModel

@@ -399,7 +399,9 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   Cliente: 'Cliente',
   Lead: 'Lead',
-  Oportunidade: 'Oportunidade'
+  Oportunidade: 'Oportunidade',
+  EventoOutbox: 'EventoOutbox',
+  ChaveIdempotencia: 'ChaveIdempotencia'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -415,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "cliente" | "lead" | "oportunidade"
+    modelProps: "cliente" | "lead" | "oportunidade" | "eventoOutbox" | "chaveIdempotencia"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -641,6 +643,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    EventoOutbox: {
+      payload: Prisma.$EventoOutboxPayload<ExtArgs>
+      fields: Prisma.EventoOutboxFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.EventoOutboxFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.EventoOutboxFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload>
+        }
+        findFirst: {
+          args: Prisma.EventoOutboxFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.EventoOutboxFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload>
+        }
+        findMany: {
+          args: Prisma.EventoOutboxFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload>[]
+        }
+        create: {
+          args: Prisma.EventoOutboxCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload>
+        }
+        createMany: {
+          args: Prisma.EventoOutboxCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.EventoOutboxCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload>[]
+        }
+        delete: {
+          args: Prisma.EventoOutboxDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload>
+        }
+        update: {
+          args: Prisma.EventoOutboxUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload>
+        }
+        deleteMany: {
+          args: Prisma.EventoOutboxDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.EventoOutboxUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.EventoOutboxUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload>[]
+        }
+        upsert: {
+          args: Prisma.EventoOutboxUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$EventoOutboxPayload>
+        }
+        aggregate: {
+          args: Prisma.EventoOutboxAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateEventoOutbox>
+        }
+        groupBy: {
+          args: Prisma.EventoOutboxGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EventoOutboxGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.EventoOutboxCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.EventoOutboxCountAggregateOutputType> | number
+        }
+      }
+    }
+    ChaveIdempotencia: {
+      payload: Prisma.$ChaveIdempotenciaPayload<ExtArgs>
+      fields: Prisma.ChaveIdempotenciaFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ChaveIdempotenciaFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ChaveIdempotenciaFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload>
+        }
+        findFirst: {
+          args: Prisma.ChaveIdempotenciaFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ChaveIdempotenciaFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload>
+        }
+        findMany: {
+          args: Prisma.ChaveIdempotenciaFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload>[]
+        }
+        create: {
+          args: Prisma.ChaveIdempotenciaCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload>
+        }
+        createMany: {
+          args: Prisma.ChaveIdempotenciaCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ChaveIdempotenciaCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload>[]
+        }
+        delete: {
+          args: Prisma.ChaveIdempotenciaDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload>
+        }
+        update: {
+          args: Prisma.ChaveIdempotenciaUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload>
+        }
+        deleteMany: {
+          args: Prisma.ChaveIdempotenciaDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ChaveIdempotenciaUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ChaveIdempotenciaUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload>[]
+        }
+        upsert: {
+          args: Prisma.ChaveIdempotenciaUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChaveIdempotenciaPayload>
+        }
+        aggregate: {
+          args: Prisma.ChaveIdempotenciaAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateChaveIdempotencia>
+        }
+        groupBy: {
+          args: Prisma.ChaveIdempotenciaGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ChaveIdempotenciaGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ChaveIdempotenciaCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ChaveIdempotenciaCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -718,11 +868,46 @@ export const OportunidadeScalarFieldEnum = {
   status: 'status',
   responsavel: 'responsavel',
   observacoes: 'observacoes',
+  versao: 'versao',
   criadoEm: 'criadoEm',
   atualizadoEm: 'atualizadoEm'
 } as const
 
 export type OportunidadeScalarFieldEnum = (typeof OportunidadeScalarFieldEnum)[keyof typeof OportunidadeScalarFieldEnum]
+
+
+export const EventoOutboxScalarFieldEnum = {
+  id: 'id',
+  agregado: 'agregado',
+  tipo: 'tipo',
+  servico: 'servico',
+  caminho: 'caminho',
+  payload: 'payload',
+  tentativas: 'tentativas',
+  proximaTentativaEm: 'proximaTentativaEm',
+  bloqueadoAte: 'bloqueadoAte',
+  enviadoEm: 'enviadoEm',
+  falhouEm: 'falhouEm',
+  ultimoErro: 'ultimoErro',
+  criadoEm: 'criadoEm'
+} as const
+
+export type EventoOutboxScalarFieldEnum = (typeof EventoOutboxScalarFieldEnum)[keyof typeof EventoOutboxScalarFieldEnum]
+
+
+export const ChaveIdempotenciaScalarFieldEnum = {
+  id: 'id',
+  usuario: 'usuario',
+  chave: 'chave',
+  hash: 'hash',
+  status: 'status',
+  codigoResposta: 'codigoResposta',
+  corpoResposta: 'corpoResposta',
+  criadoEm: 'criadoEm',
+  atualizadoEm: 'atualizadoEm'
+} as const
+
+export type ChaveIdempotenciaScalarFieldEnum = (typeof ChaveIdempotenciaScalarFieldEnum)[keyof typeof ChaveIdempotenciaScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -731,6 +916,21 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -747,6 +947,15 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -843,6 +1052,34 @@ export type EnumStatusOportunidadeFieldRefInput<$PrismaModel> = FieldRefInputTyp
  * Reference to a field of type 'StatusOportunidade[]'
  */
 export type ListEnumStatusOportunidadeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StatusOportunidade[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
+ * Reference to a field of type 'StatusChaveIdempotencia'
+ */
+export type EnumStatusChaveIdempotenciaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StatusChaveIdempotencia'>
+    
+
+
+/**
+ * Reference to a field of type 'StatusChaveIdempotencia[]'
+ */
+export type ListEnumStatusChaveIdempotenciaFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StatusChaveIdempotencia[]'>
     
 
 
@@ -1013,6 +1250,8 @@ export type GlobalOmitConfig = {
   cliente?: Prisma.ClienteOmit
   lead?: Prisma.LeadOmit
   oportunidade?: Prisma.OportunidadeOmit
+  eventoOutbox?: Prisma.EventoOutboxOmit
+  chaveIdempotencia?: Prisma.ChaveIdempotenciaOmit
 }
 
 /* Types for Logging */

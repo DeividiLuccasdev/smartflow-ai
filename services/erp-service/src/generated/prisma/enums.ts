@@ -17,3 +17,11 @@ export const StatusPedido = {
 } as const
 
 export type StatusPedido = (typeof StatusPedido)[keyof typeof StatusPedido]
+
+
+export const StatusChaveIdempotencia = {
+  EM_ANDAMENTO: 'EM_ANDAMENTO',
+  CONCLUIDA: 'CONCLUIDA'
+} as const
+
+export type StatusChaveIdempotencia = (typeof StatusChaveIdempotencia)[keyof typeof StatusChaveIdempotencia]

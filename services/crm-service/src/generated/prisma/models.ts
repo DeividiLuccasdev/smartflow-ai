@@ -11,4 +11,6 @@
 export type * from './models/Cliente.js'
 export type * from './models/Lead.js'
 export type * from './models/Oportunidade.js'
+export type * from './models/EventoOutbox.js'
+export type * from './models/ChaveIdempotencia.js'
 export type * from './commonInputTypes.js'

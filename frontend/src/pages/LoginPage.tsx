@@ -49,7 +49,10 @@ function LoginPage() {
           email,
           senha,
         }),
-      }, () => setAguardando(true));
+      }, () => setAguardando(true), {
+        // Login não altera dados: repetir enquanto o Gateway acorda é seguro
+        repetirSempre: true,
+      });
 
       const dados = await resposta.json();
 

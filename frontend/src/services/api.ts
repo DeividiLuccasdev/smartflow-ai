@@ -23,7 +23,28 @@ const ESPERA_MAXIMA_MS = 3 * 60 * 1000;
 const esperar = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-async function servicoIniciando(resposta: Response) {
+export const CABECALHO_IDEMPOTENCIA = "Idempotency-Key";
+
+// Repetir uma requisição só é seguro se ela não puder ter efeito duplicado:
+// leituras (GET/HEAD) ou escritas com Idempotency-Key, que o servidor
+// reconhece e responde com o resultado da primeira execução.
+function podeRepetir(opcoes: RequestInit) {
+  const metodo = (opcoes.method ?? "GET").toUpperCase();
+
+  return (
+    metodo === "GET" ||
+    metodo === "HEAD" ||
+    new Headers(opcoes.headers).has(CABECALHO_IDEMPOTENCIA)
+  );
+}
+
+// "naoEncaminhada": o Gateway respondeu SERVICE_STARTING antes de repassar a
+// requisição ao serviço, então repetir é sempre seguro.
+// "talvezEncaminhada": 502/503 sem JSON ou falha de rede; a requisição pode
+// ter chegado ao serviço, então só repete se for idempotente.
+async function servicoIniciando(
+  resposta: Response
+): Promise<false | "naoEncaminhada" | "talvezEncaminhada"> {
   if (resposta.status !== 502 && resposta.status !== 503) {
     return false;
   }
@@ -31,30 +52,39 @@ async function servicoIniciando(resposta: Response) {
   try {
     const dados = await resposta.clone().json();
 
-    return dados?.codigo === "SERVICE_STARTING";
+    return dados?.codigo === "SERVICE_STARTING" ? "naoEncaminhada" : false;
   } catch {
     // 502/503 sem JSON: é o próprio Gateway ainda subindo
-    return true;
+    return "talvezEncaminhada";
   }
 }
 
 export async function fetchAguardandoServicos(
   url: string,
   opcoes: RequestInit = {},
-  aoAguardar?: () => void
+  aoAguardar?: () => void,
+  // Para requisições sem efeito colateral que não são GET (ex.: login)
+  { repetirSempre = false }: { repetirSempre?: boolean } = {}
 ) {
   const limite = Date.now() + ESPERA_MAXIMA_MS;
+  const repetivel = repetirSempre || podeRepetir(opcoes);
 
   for (;;) {
     try {
       const resposta = await fetch(url, opcoes);
+      const iniciando = await servicoIniciando(resposta);
 
-      if (!(await servicoIniciando(resposta)) || Date.now() > limite) {
+      if (
+        !iniciando ||
+        (iniciando === "talvezEncaminhada" && !repetivel) ||
+        Date.now() > limite
+      ) {
         return resposta;
       }
     } catch (erro) {
-      // Falha de rede: o Gateway ainda está acordando
-      if (Date.now() > limite) {
+      // Falha de rede: o Gateway pode estar acordando, mas a requisição
+      // também pode ter chegado e só a resposta se perdeu.
+      if (!repetivel || Date.now() > limite) {
         throw erro;
       }
     }
@@ -138,6 +168,19 @@ export async function apiFetch(
 
   if (opcoes.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
+
+  // Uma chave por ação do usuário (cada chamada de apiFetch), reaproveitada
+  // em todas as tentativas de fetchAguardandoServicos. Se a resposta se
+  // perder e a requisição for repetida, o servidor não executa de novo.
+  const metodo = (opcoes.method ?? "GET").toUpperCase();
+
+  if (
+    metodo !== "GET" &&
+    metodo !== "HEAD" &&
+    !headers.has(CABECALHO_IDEMPOTENCIA)
+  ) {
+    headers.set(CABECALHO_IDEMPOTENCIA, crypto.randomUUID());
   }
 
   const resposta = await fetchAguardandoServicos(`${API_URL}${caminho}`, {

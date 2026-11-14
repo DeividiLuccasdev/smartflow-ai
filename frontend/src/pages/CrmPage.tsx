@@ -9,6 +9,7 @@ type Oportunidade = {
   status: string;
   responsavel: string | null;
   observacoes: string | null;
+  versao: number;
 };
 
 function CrmPage() {
@@ -150,6 +151,7 @@ function converterValorParaNumero(valorFormatado: string) {
 
   async function atualizarStatus(
     id: number,
+    versao: number,
     novoStatus: string
   ) {
     try {
@@ -163,8 +165,11 @@ function converterValorParaNumero(valorFormatado: string) {
           headers: {
             "Content-Type": "application/json",
           },
+          // A versão lida evita sobrescrever a alteração de outra pessoa:
+          // se a oportunidade mudou desde então, o CRM responde 409.
           body: JSON.stringify({
             status: novoStatus,
+            versao,
           }),
         }
       );
@@ -172,6 +177,10 @@ function converterValorParaNumero(valorFormatado: string) {
       const dados = await resposta.json();
 
       if (!resposta.ok) {
+        if (resposta.status === 409) {
+          await carregarOportunidades();
+        }
+
         throw new Error(
           dados.erro || "Erro ao atualizar oportunidade."
         );
@@ -453,6 +462,7 @@ function converterValorParaNumero(valorFormatado: string) {
                         onChange={(evento) =>
                           atualizarStatus(
                             oportunidade.id,
+                            oportunidade.versao,
                             evento.target.value
                           )
                         }

@@ -50,3 +50,44 @@ model ItemPedido {
 
   criadoEm DateTime @default(now())
 }
+
+// Outbox transacional: eventos para outros serviços, gravados na mesma
+// transação que muda o status do pedido (ver src/lib/outbox.ts).
+model EventoOutbox {
+  id                 Int       @id @default(autoincrement())
+  agregado           String
+  tipo               String
+  servico            String
+  caminho            String
+  payload            Json
+  tentativas         Int       @default(0)
+  proximaTentativaEm DateTime  @default(now())
+  bloqueadoAte       DateTime?
+  enviadoEm          DateTime?
+  falhouEm           DateTime?
+  ultimoErro         String?
+  criadoEm           DateTime  @default(now())
+
+  @@index([enviadoEm, falhouEm, proximaTentativaEm])
+  @@index([agregado])
+}
+
+enum StatusChaveIdempotencia {
+  EM_ANDAMENTO
+  CONCLUIDA
+}
+
+// Respostas guardadas por Idempotency-Key (ver src/lib/idempotencia.ts).
+model ChaveIdempotencia {
+  id             Int                     @id @default(autoincrement())
+  usuario        String
+  chave          String
+  hash           String
+  status         StatusChaveIdempotencia @default(EM_ANDAMENTO)
+  codigoResposta Int?
+  corpoResposta  Json?
+  criadoEm       DateTime                @default(now())
+  atualizadoEm   DateTime                @updatedAt
+
+  @@unique([usuario, chave])
+}

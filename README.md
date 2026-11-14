@@ -90,6 +90,37 @@ Defina a **mesma** `INTERNAL_API_KEY` no `.env` do Gateway e de todos os serviç
 
     openssl rand -hex 32
 
+## Consistência e concorrência
+
+- **Transições de status atômicas**: confirmar/cancelar pedido e pagar/cancelar
+  conta usam `UPDATE ... WHERE status = <esperado>` e conferem quantas linhas
+  mudaram. Com duas requisições ao mesmo tempo, só uma vence; o estoque de um
+  pedido cancelado é devolvido uma única vez.
+- **Outbox transacional** (ERP → Financeiro e CRM → ERP): o evento é gravado na
+  tabela `EventoOutbox` na mesma transação que muda o status. Um relay entrega o
+  evento com novas tentativas (`src/lib/outbox.ts`); os endpoints de integração
+  são idempotentes, então uma entrega repetida não duplica conta nem pedido.
+- **Idempotency-Key**: o frontend gera uma chave por ação e só repete
+  automaticamente leituras ou requisições com chave. `POST /erp/pedidos` e os
+  cadastros do CRM guardam a resposta por chave (`src/lib/idempotencia.ts`):
+  a mesma chave devolve a resposta original e, com outro corpo, responde 422.
+- **Concorrência otimista**: oportunidades têm `versao`; editar a partir de uma
+  versão antiga responde 409 em vez de sobrescrever. Oportunidade `GANHA` é final.
+- **Estoque**: só muda por incremento/decremento atômico (`ajusteEstoque` no
+  `PUT /produtos/:id`), nunca por um valor absoluto lido antes.
+- **Dinheiro em decimal**: totais calculados com `Prisma.Decimal` e `SUM` no banco.
+
+### Testes
+
+Testes de integração (Vitest + Supertest) contra um PostgreSQL real, cobrindo as
+corridas com `Promise.all`. Em cada serviço (`crm`, `erp`, `finance`):
+
+    $env:DATABASE_URL="postgresql://usuario:senha@localhost:5432/banco_de_teste"
+    npx prisma migrate deploy
+    npm test
+
+Os testes apagam os dados do banco informado: use um banco só para testes.
+
 ## Executando
 
 Suba os bancos de dados (Auth, CRM, ERP e Financeiro):
