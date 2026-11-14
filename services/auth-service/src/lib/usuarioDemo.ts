@@ -13,6 +13,12 @@ export const PERFIL_DEMO = "ADMIN";
 export const ERRO_CONTA_DEMO =
     "A conta de demonstração não pode ser alterada ou desativada.";
 
+export const ERRO_DEMO_ALTERAR_USUARIOS =
+    "A conta de demonstração não pode ativar ou desativar usuários.";
+
+export const ERRO_DEMO_CRIAR_ADMIN =
+    "A conta de demonstração não pode criar usuários administradores.";
+
 // Ponto único de proteção da conta demo: qualquer rota que altere,
 // desative ou remova um usuário deve consultar este helper.
 export function ehContaDemo(email: string | null | undefined) {

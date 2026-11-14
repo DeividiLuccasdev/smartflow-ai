@@ -11,6 +11,7 @@ import { prisma } from "../config/prisma.js";
 export interface RequestAutenticada extends Request {
     usuario?: {
         usuarioId: number;
+        email: string;
         perfil: string;
     };
 }
@@ -62,6 +63,7 @@ export async function autenticarToken(
         },
         select: {
             id: true,
+            email: true,
             perfil: true,
             ativo: true
         }
@@ -75,6 +77,7 @@ export async function autenticarToken(
 
     req.usuario = {
         usuarioId: usuario.id,
+        email: usuario.email,
         perfil: usuario.perfil
     };
 

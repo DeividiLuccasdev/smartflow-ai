@@ -7,7 +7,12 @@ import jwt from "jsonwebtoken";
 import { prisma } from "./config/prisma.js";
 import { exigirChaveInterna } from "./middlewares/chaveInterna.js";
 import { gerarHashSenha } from "./lib/senha.js";
-import { ehContaDemo, ERRO_CONTA_DEMO } from "./lib/usuarioDemo.js";
+import {
+    ehContaDemo,
+    ERRO_CONTA_DEMO,
+    ERRO_DEMO_ALTERAR_USUARIOS,
+    ERRO_DEMO_CRIAR_ADMIN
+} from "./lib/usuarioDemo.js";
 
 import {
     autenticarToken,
@@ -43,7 +48,7 @@ app.post(
     "/usuarios",
     autenticarToken,
     autorizarPerfil("ADMIN"),
-    async (req, res) => {
+    async (req: RequestAutenticada, res) => {
     try {
         const {
             nome,
@@ -55,6 +60,14 @@ app.post(
         if (!nome || !email || !senha) {
             return res.status(400).json({
                 erro: "Nome, e-mail e senha são obrigatórios."
+            });
+        }
+
+        // A demo é ADMIN para mostrar todos os módulos, mas não pode
+        // criar novos administradores.
+        if (ehContaDemo(req.usuario?.email) && perfil === "ADMIN") {
+            return res.status(403).json({
+                erro: ERRO_DEMO_CRIAR_ADMIN
             });
         }
 
@@ -171,6 +184,14 @@ app.patch(
             if (typeof ativo !== "boolean") {
                 return res.status(400).json({
                     erro: "O campo ativo deve ser verdadeiro ou falso."
+                });
+            }
+
+            // A demo não ativa nem desativa contas, inclusive as
+            // contas reais de administrador.
+            if (ehContaDemo(req.usuario?.email)) {
+                return res.status(403).json({
+                    erro: ERRO_DEMO_ALTERAR_USUARIOS
                 });
             }
 

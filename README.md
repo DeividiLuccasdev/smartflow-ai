@@ -216,7 +216,7 @@ Nos serviços com banco, `prisma/` guarda o esquema e as migrações e `src/` as
 
 ## Limitações conhecidas
 
-- A conta de demonstração (perfil ADMIN, para mostrar todos os módulos) é criada ou restaurada pelo Auth Service a cada deploy no Render, após as migrações. Ela não pode ser desativada nem alterada. Localmente ela não é criada: para o primeiro ADMIN, inicie o Auth com `CRIAR_USUARIO_DEMO=true` ou insira o usuário direto no banco, já que `POST /usuarios` exige um ADMIN autenticado.
+- A conta de demonstração (perfil ADMIN, para mostrar todos os módulos) é criada ou restaurada pelo Auth Service a cada deploy no Render, após as migrações. Ela não pode ser desativada nem alterada e, mesmo sendo ADMIN, não ativa nem desativa usuários nem cria novos administradores (pode cadastrar VENDEDOR e ATENDENTE). Localmente ela não é criada: para o primeiro ADMIN, inicie o Auth com `CRIAR_USUARIO_DEMO=true` ou insira o usuário direto no banco, já que `POST /usuarios` exige um ADMIN autenticado.
 - Os dados da demo são compartilhados: qualquer visitante pode criar, editar ou cancelar registros, então o que você vê pode ter sido alterado por outra pessoa.
 - Os scripts `SmartFlow.bat` e `start-smartflow.ps1` usam o caminho fixo `C:\smartflow-ai` e só iniciam os contêineres de Auth, CRM e ERP; o banco do Financeiro precisa estar no ar pelo `docker compose`.
 - Só os bancos rodam em Docker; os serviços Node rodam direto na máquina.
