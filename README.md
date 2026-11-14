@@ -14,6 +14,8 @@
 
 [**Demo ao vivo**](https://smartflow-ai-frontend.onrender.com) · [Consistência e concorrência](docs/consistencia.md) · [Portfólio](https://portfolio-deividi.vercel.app/)
 
+**Acesso de demonstração** · e-mail `demo@example.com` · senha `Demo@2026`
+
 <img src="docs/images/dashboard.png" alt="Dashboard do SmartFlow AI" width="900">
 
 </div>
@@ -160,7 +162,7 @@ Pré-requisitos: Node.js 22, Docker Desktop e Windows (os scripts de inicializa�
 | --- | --- |
 | `frontend` | `VITE_API_URL` |
 | `gateway` | `PORT`, `AUTH_SERVICE_URL`, `CRM_SERVICE_URL`, `ERP_SERVICE_URL`, `FINANCE_SERVICE_URL`, `AI_SERVICE_URL`, `INTERNAL_API_KEY` |
-| `services/auth-service` | `PORT`, `DATABASE_URL`, `JWT_SECRET`, `INTERNAL_API_KEY` |
+| `services/auth-service` | `PORT`, `DATABASE_URL`, `JWT_SECRET`, `INTERNAL_API_KEY`, `CRIAR_USUARIO_DEMO` (opcional) |
 | `services/crm-service` | `PORT`, `DATABASE_URL`, `ERP_SERVICE_URL`, `INTERNAL_API_KEY` |
 | `services/erp-service` | `PORT`, `DATABASE_URL`, `FINANCE_SERVICE_URL`, `INTERNAL_API_KEY` |
 | `services/finance-service` | `PORT`, `DATABASE_URL`, `INTERNAL_API_KEY` |
@@ -190,7 +192,7 @@ npm test
 
 Os testes apagam os dados do banco informado: use um banco só para testes.
 
-O CI (GitHub Actions) roda o typecheck de todos os serviços e do Gateway, os testes de integração do CRM, ERP e Financeiro contra um PostgreSQL 16 de serviço, e o lint e o build do frontend.
+O CI (GitHub Actions) roda o typecheck de todos os serviços e do Gateway, os testes de integração do CRM, ERP e Financeiro contra um PostgreSQL 16 de serviço, os testes unitários do Auth (proteção e seed da conta demo), e o lint e o build do frontend.
 
 ## Estrutura
 
@@ -210,22 +212,23 @@ smartflow-ai/
 └── start-smartflow.ps1
 ```
 
-Nos serviços com banco, `prisma/` guarda o esquema e as migrações e `src/` as rotas e os middlewares. CRM e ERP têm `src/lib/` com outbox e idempotência; CRM, ERP e Financeiro têm `test/`.
+Nos serviços com banco, `prisma/` guarda o esquema e as migrações e `src/` as rotas e os middlewares. CRM e ERP têm `src/lib/` com outbox e idempotência; Auth, CRM, ERP e Financeiro têm `test/`.
 
 ## Limitações conhecidas
 
-- MVP funcional: não há seed; o primeiro usuário ADMIN precisa ser inserido direto no banco, já que `POST /usuarios` exige um ADMIN autenticado.
+- A conta de demonstração (perfil ADMIN, para mostrar todos os módulos) é criada ou restaurada pelo Auth Service a cada deploy no Render, após as migrações. Ela não pode ser desativada nem alterada. Localmente ela não é criada: para o primeiro ADMIN, inicie o Auth com `CRIAR_USUARIO_DEMO=true` ou insira o usuário direto no banco, já que `POST /usuarios` exige um ADMIN autenticado.
+- Os dados da demo são compartilhados: qualquer visitante pode criar, editar ou cancelar registros, então o que você vê pode ter sido alterado por outra pessoa.
 - Os scripts `SmartFlow.bat` e `start-smartflow.ps1` usam o caminho fixo `C:\smartflow-ai` e só iniciam os contêineres de Auth, CRM e ERP; o banco do Financeiro precisa estar no ar pelo `docker compose`.
 - Só os bancos rodam em Docker; os serviços Node rodam direto na máquina.
-- Auth, Gateway, IA e frontend ainda não têm testes automatizados.
+- Gateway, IA e frontend ainda não têm testes automatizados; o Auth tem só testes unitários.
 - Não há rate limit no Gateway, e o token JWT fica no `localStorage` do navegador.
 
 ## Roadmap
 
-- [ ] Seed com usuário administrador inicial
+- [x] Seed com usuário administrador inicial (conta de demonstração)
 - [ ] Scripts de inicialização independentes do caminho de instalação
 - [ ] Dockerfile por serviço e `docker compose` com a aplicação completa
-- [ ] Testes para Auth, Gateway e IA
+- [ ] Testes para Gateway e IA (e de integração no Auth)
 - [ ] Rate limit no Gateway
 
 ## Autor
