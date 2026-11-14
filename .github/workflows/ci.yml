@@ -51,6 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         pacote:
+          - services/auth-service
           - services/crm-service
           - services/erp-service
           - services/finance-service
