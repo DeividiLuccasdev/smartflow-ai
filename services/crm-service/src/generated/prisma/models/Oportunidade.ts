@@ -29,11 +29,13 @@ export type AggregateOportunidade = {
 export type OportunidadeAvgAggregateOutputType = {
   id: number | null
   valor: runtime.Decimal | null
+  versao: number | null
 }
 
 export type OportunidadeSumAggregateOutputType = {
   id: number | null
   valor: runtime.Decimal | null
+  versao: number | null
 }
 
 export type OportunidadeMinAggregateOutputType = {
@@ -44,6 +46,7 @@ export type OportunidadeMinAggregateOutputType = {
   status: $Enums.StatusOportunidade | null
   responsavel: string | null
   observacoes: string | null
+  versao: number | null
   criadoEm: Date | null
   atualizadoEm: Date | null
 }
@@ -56,6 +59,7 @@ export type OportunidadeMaxAggregateOutputType = {
   status: $Enums.StatusOportunidade | null
   responsavel: string | null
   observacoes: string | null
+  versao: number | null
   criadoEm: Date | null
   atualizadoEm: Date | null
 }
@@ -68,6 +72,7 @@ export type OportunidadeCountAggregateOutputType = {
   status: number
   responsavel: number
   observacoes: number
+  versao: number
   criadoEm: number
   atualizadoEm: number
   _all: number
@@ -77,11 +82,13 @@ export type OportunidadeCountAggregateOutputType = {
 export type OportunidadeAvgAggregateInputType = {
   id?: true
   valor?: true
+  versao?: true
 }
 
 export type OportunidadeSumAggregateInputType = {
   id?: true
   valor?: true
+  versao?: true
 }
 
 export type OportunidadeMinAggregateInputType = {
@@ -92,6 +99,7 @@ export type OportunidadeMinAggregateInputType = {
   status?: true
   responsavel?: true
   observacoes?: true
+  versao?: true
   criadoEm?: true
   atualizadoEm?: true
 }
@@ -104,6 +112,7 @@ export type OportunidadeMaxAggregateInputType = {
   status?: true
   responsavel?: true
   observacoes?: true
+  versao?: true
   criadoEm?: true
   atualizadoEm?: true
 }
@@ -116,6 +125,7 @@ export type OportunidadeCountAggregateInputType = {
   status?: true
   responsavel?: true
   observacoes?: true
+  versao?: true
   criadoEm?: true
   atualizadoEm?: true
   _all?: true
@@ -215,6 +225,7 @@ export type OportunidadeGroupByOutputType = {
   status: $Enums.StatusOportunidade
   responsavel: string | null
   observacoes: string | null
+  versao: number
   criadoEm: Date
   atualizadoEm: Date
   _count: OportunidadeCountAggregateOutputType | null
@@ -250,6 +261,7 @@ export type OportunidadeWhereInput = {
   status?: Prisma.EnumStatusOportunidadeFilter<"Oportunidade"> | $Enums.StatusOportunidade
   responsavel?: Prisma.StringNullableFilter<"Oportunidade"> | string | null
   observacoes?: Prisma.StringNullableFilter<"Oportunidade"> | string | null
+  versao?: Prisma.IntFilter<"Oportunidade"> | number
   criadoEm?: Prisma.DateTimeFilter<"Oportunidade"> | Date | string
   atualizadoEm?: Prisma.DateTimeFilter<"Oportunidade"> | Date | string
 }
@@ -262,6 +274,7 @@ export type OportunidadeOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   responsavel?: Prisma.SortOrderInput | Prisma.SortOrder
   observacoes?: Prisma.SortOrderInput | Prisma.SortOrder
+  versao?: Prisma.SortOrder
   criadoEm?: Prisma.SortOrder
   atualizadoEm?: Prisma.SortOrder
 }
@@ -277,6 +290,7 @@ export type OportunidadeWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumStatusOportunidadeFilter<"Oportunidade"> | $Enums.StatusOportunidade
   responsavel?: Prisma.StringNullableFilter<"Oportunidade"> | string | null
   observacoes?: Prisma.StringNullableFilter<"Oportunidade"> | string | null
+  versao?: Prisma.IntFilter<"Oportunidade"> | number
   criadoEm?: Prisma.DateTimeFilter<"Oportunidade"> | Date | string
   atualizadoEm?: Prisma.DateTimeFilter<"Oportunidade"> | Date | string
 }, "id">
@@ -289,6 +303,7 @@ export type OportunidadeOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   responsavel?: Prisma.SortOrderInput | Prisma.SortOrder
   observacoes?: Prisma.SortOrderInput | Prisma.SortOrder
+  versao?: Prisma.SortOrder
   criadoEm?: Prisma.SortOrder
   atualizadoEm?: Prisma.SortOrder
   _count?: Prisma.OportunidadeCountOrderByAggregateInput
@@ -309,6 +324,7 @@ export type OportunidadeScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumStatusOportunidadeWithAggregatesFilter<"Oportunidade"> | $Enums.StatusOportunidade
   responsavel?: Prisma.StringNullableWithAggregatesFilter<"Oportunidade"> | string | null
   observacoes?: Prisma.StringNullableWithAggregatesFilter<"Oportunidade"> | string | null
+  versao?: Prisma.IntWithAggregatesFilter<"Oportunidade"> | number
   criadoEm?: Prisma.DateTimeWithAggregatesFilter<"Oportunidade"> | Date | string
   atualizadoEm?: Prisma.DateTimeWithAggregatesFilter<"Oportunidade"> | Date | string
 }
@@ -320,6 +336,7 @@ export type OportunidadeCreateInput = {
   status?: $Enums.StatusOportunidade
   responsavel?: string | null
   observacoes?: string | null
+  versao?: number
   criadoEm?: Date | string
   atualizadoEm?: Date | string
 }
@@ -332,6 +349,7 @@ export type OportunidadeUncheckedCreateInput = {
   status?: $Enums.StatusOportunidade
   responsavel?: string | null
   observacoes?: string | null
+  versao?: number
   criadoEm?: Date | string
   atualizadoEm?: Date | string
 }
@@ -343,6 +361,7 @@ export type OportunidadeUpdateInput = {
   status?: Prisma.EnumStatusOportunidadeFieldUpdateOperationsInput | $Enums.StatusOportunidade
   responsavel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   observacoes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  versao?: Prisma.IntFieldUpdateOperationsInput | number
   criadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   atualizadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -355,6 +374,7 @@ export type OportunidadeUncheckedUpdateInput = {
   status?: Prisma.EnumStatusOportunidadeFieldUpdateOperationsInput | $Enums.StatusOportunidade
   responsavel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   observacoes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  versao?: Prisma.IntFieldUpdateOperationsInput | number
   criadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   atualizadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -367,6 +387,7 @@ export type OportunidadeCreateManyInput = {
   status?: $Enums.StatusOportunidade
   responsavel?: string | null
   observacoes?: string | null
+  versao?: number
   criadoEm?: Date | string
   atualizadoEm?: Date | string
 }
@@ -378,6 +399,7 @@ export type OportunidadeUpdateManyMutationInput = {
   status?: Prisma.EnumStatusOportunidadeFieldUpdateOperationsInput | $Enums.StatusOportunidade
   responsavel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   observacoes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  versao?: Prisma.IntFieldUpdateOperationsInput | number
   criadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   atualizadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -390,6 +412,7 @@ export type OportunidadeUncheckedUpdateManyInput = {
   status?: Prisma.EnumStatusOportunidadeFieldUpdateOperationsInput | $Enums.StatusOportunidade
   responsavel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   observacoes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  versao?: Prisma.IntFieldUpdateOperationsInput | number
   criadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   atualizadoEm?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -402,6 +425,7 @@ export type OportunidadeCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   responsavel?: Prisma.SortOrder
   observacoes?: Prisma.SortOrder
+  versao?: Prisma.SortOrder
   criadoEm?: Prisma.SortOrder
   atualizadoEm?: Prisma.SortOrder
 }
@@ -409,6 +433,7 @@ export type OportunidadeCountOrderByAggregateInput = {
 export type OportunidadeAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   valor?: Prisma.SortOrder
+  versao?: Prisma.SortOrder
 }
 
 export type OportunidadeMaxOrderByAggregateInput = {
@@ -419,6 +444,7 @@ export type OportunidadeMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   responsavel?: Prisma.SortOrder
   observacoes?: Prisma.SortOrder
+  versao?: Prisma.SortOrder
   criadoEm?: Prisma.SortOrder
   atualizadoEm?: Prisma.SortOrder
 }
@@ -431,6 +457,7 @@ export type OportunidadeMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   responsavel?: Prisma.SortOrder
   observacoes?: Prisma.SortOrder
+  versao?: Prisma.SortOrder
   criadoEm?: Prisma.SortOrder
   atualizadoEm?: Prisma.SortOrder
 }
@@ -438,6 +465,7 @@ export type OportunidadeMinOrderByAggregateInput = {
 export type OportunidadeSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   valor?: Prisma.SortOrder
+  versao?: Prisma.SortOrder
 }
 
 export type DecimalFieldUpdateOperationsInput = {
@@ -462,6 +490,7 @@ export type OportunidadeSelect<ExtArgs extends runtime.Types.Extensions.Internal
   status?: boolean
   responsavel?: boolean
   observacoes?: boolean
+  versao?: boolean
   criadoEm?: boolean
   atualizadoEm?: boolean
 }, ExtArgs["result"]["oportunidade"]>
@@ -474,6 +503,7 @@ export type OportunidadeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   status?: boolean
   responsavel?: boolean
   observacoes?: boolean
+  versao?: boolean
   criadoEm?: boolean
   atualizadoEm?: boolean
 }, ExtArgs["result"]["oportunidade"]>
@@ -486,6 +516,7 @@ export type OportunidadeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   status?: boolean
   responsavel?: boolean
   observacoes?: boolean
+  versao?: boolean
   criadoEm?: boolean
   atualizadoEm?: boolean
 }, ExtArgs["result"]["oportunidade"]>
@@ -498,11 +529,12 @@ export type OportunidadeSelectScalar = {
   status?: boolean
   responsavel?: boolean
   observacoes?: boolean
+  versao?: boolean
   criadoEm?: boolean
   atualizadoEm?: boolean
 }
 
-export type OportunidadeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "titulo" | "cliente" | "valor" | "status" | "responsavel" | "observacoes" | "criadoEm" | "atualizadoEm", ExtArgs["result"]["oportunidade"]>
+export type OportunidadeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "titulo" | "cliente" | "valor" | "status" | "responsavel" | "observacoes" | "versao" | "criadoEm" | "atualizadoEm", ExtArgs["result"]["oportunidade"]>
 
 export type $OportunidadePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Oportunidade"
@@ -515,6 +547,7 @@ export type $OportunidadePayload<ExtArgs extends runtime.Types.Extensions.Intern
     status: $Enums.StatusOportunidade
     responsavel: string | null
     observacoes: string | null
+    versao: number
     criadoEm: Date
     atualizadoEm: Date
   }, ExtArgs["result"]["oportunidade"]>
@@ -947,6 +980,7 @@ export interface OportunidadeFieldRefs {
   readonly status: Prisma.FieldRef<"Oportunidade", 'StatusOportunidade'>
   readonly responsavel: Prisma.FieldRef<"Oportunidade", 'String'>
   readonly observacoes: Prisma.FieldRef<"Oportunidade", 'String'>
+  readonly versao: Prisma.FieldRef<"Oportunidade", 'Int'>
   readonly criadoEm: Prisma.FieldRef<"Oportunidade", 'DateTime'>
   readonly atualizadoEm: Prisma.FieldRef<"Oportunidade", 'DateTime'>
 }

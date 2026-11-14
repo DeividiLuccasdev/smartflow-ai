@@ -56,3 +56,13 @@ export type Pedido = Prisma.PedidoModel
  * 
  */
 export type ItemPedido = Prisma.ItemPedidoModel
+/**
+ * Model EventoOutbox
+ * 
+ */
+export type EventoOutbox = Prisma.EventoOutboxModel
+/**
+ * Model ChaveIdempotencia
+ * 
+ */
+export type ChaveIdempotencia = Prisma.ChaveIdempotenciaModel

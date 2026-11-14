@@ -29,3 +29,11 @@ export const StatusOportunidade = {
 } as const
 
 export type StatusOportunidade = (typeof StatusOportunidade)[keyof typeof StatusOportunidade]
+
+
+export const StatusChaveIdempotencia = {
+  EM_ANDAMENTO: 'EM_ANDAMENTO',
+  CONCLUIDA: 'CONCLUIDA'
+} as const
+
+export type StatusChaveIdempotencia = (typeof StatusChaveIdempotencia)[keyof typeof StatusChaveIdempotencia]

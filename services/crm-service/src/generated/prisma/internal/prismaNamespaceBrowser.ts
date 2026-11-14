@@ -53,7 +53,9 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   Cliente: 'Cliente',
   Lead: 'Lead',
-  Oportunidade: 'Oportunidade'
+  Oportunidade: 'Oportunidade',
+  EventoOutbox: 'EventoOutbox',
+  ChaveIdempotencia: 'ChaveIdempotencia'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -110,11 +112,46 @@ export const OportunidadeScalarFieldEnum = {
   status: 'status',
   responsavel: 'responsavel',
   observacoes: 'observacoes',
+  versao: 'versao',
   criadoEm: 'criadoEm',
   atualizadoEm: 'atualizadoEm'
 } as const
 
 export type OportunidadeScalarFieldEnum = (typeof OportunidadeScalarFieldEnum)[keyof typeof OportunidadeScalarFieldEnum]
+
+
+export const EventoOutboxScalarFieldEnum = {
+  id: 'id',
+  agregado: 'agregado',
+  tipo: 'tipo',
+  servico: 'servico',
+  caminho: 'caminho',
+  payload: 'payload',
+  tentativas: 'tentativas',
+  proximaTentativaEm: 'proximaTentativaEm',
+  bloqueadoAte: 'bloqueadoAte',
+  enviadoEm: 'enviadoEm',
+  falhouEm: 'falhouEm',
+  ultimoErro: 'ultimoErro',
+  criadoEm: 'criadoEm'
+} as const
+
+export type EventoOutboxScalarFieldEnum = (typeof EventoOutboxScalarFieldEnum)[keyof typeof EventoOutboxScalarFieldEnum]
+
+
+export const ChaveIdempotenciaScalarFieldEnum = {
+  id: 'id',
+  usuario: 'usuario',
+  chave: 'chave',
+  hash: 'hash',
+  status: 'status',
+  codigoResposta: 'codigoResposta',
+  corpoResposta: 'corpoResposta',
+  criadoEm: 'criadoEm',
+  atualizadoEm: 'atualizadoEm'
+} as const
+
+export type ChaveIdempotenciaScalarFieldEnum = (typeof ChaveIdempotenciaScalarFieldEnum)[keyof typeof ChaveIdempotenciaScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -123,6 +160,21 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -139,4 +191,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
